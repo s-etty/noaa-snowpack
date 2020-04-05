@@ -1,0 +1,69 @@
+---
+title: "Visualizing Snowdepth"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Government Camp, OR
+
+Located just over an hour East of Portland, Government Camp is a small "alpine" town. They are the gateway to several ski areas on Mt. Hood, Timberline, Mt. Hood Meadows, Ski Bowl, and Summit Ski Area. Snow is the lifeblood of this town in the winter. Without it, local businesses couldn't stay open through the winter. 
+
+Here are some important summary stats for Government Camp:
+
+| Summary Stats |  |
+|----|----|
+| Elevation | 3,914 ft (1,193 m) |
+| Population | 193 |
+| Area | 0.75 sq mi (1.94 km2) |
+
+```{r messages = FALSE, warning = FALSE}
+#install.packages('plotly')
+#install.packages('gapmind')
+#install.packsges('lubridate')
+
+library(plotly)
+library(gapminder)
+library(lubridate)
+library(tidyr)
+#loading the packages
+
+source('data/govy-data.R')
+#loading the script that pulls the data from NOAA
+
+```
+``` {r}
+
+snow_depth <- govy_data$snwd %>%
+  replace_na(list(snwd = 0)) %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_depth = mean(snwd))
+#group by year and week, summarize as weekly snow depth
+
+#snow_depth$year_week <- paste(snow_depth$year, snow_depth$week, sep = "-")
+#snow_depth$year_week <- as.factor(snow_depth$year_week)
+#create a new col, year_week. string version of year and week combined.
+#converted to factor so plotly doesn't try to sort alphabetically
+
+p <- snow_depth %>% plot_ly(
+    x = ~year, 
+    y = ~avg_depth, 
+    color = ~avg_depth, 
+    frame = ~month, 
+    text = ~avg_depth, 
+    hoverinfo = "text",
+    type = 'bar'
+  ) %>%
+  layout(
+    title = "Average Snow Depth by Week",
+    yaxis = list(title = "Average Depth (mm)")
+  )
+  
+
+p
+```
+
