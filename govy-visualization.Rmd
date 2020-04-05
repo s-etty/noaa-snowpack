@@ -1,8 +1,10 @@
 ---
 title: "Visualizing Snowdepth"
 output:
-  html_document:
-    df_print: paged
+ html_document:
+  self_contained: false
+  keep_md: true
+  code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +23,7 @@ Here are some important summary stats for Government Camp:
 | Population | 193 |
 | Area | 0.75 sq mi (1.94 km2) |
 
-```{r messages = FALSE, warning = FALSE}
+```{r message = FALSE, echo = FALSE, warning = FALSE}
 #install.packages('plotly')
 #install.packages('gapmind')
 #install.packsges('lubridate')
@@ -36,7 +38,7 @@ source('data/govy-data.R')
 #loading the script that pulls the data from NOAA
 
 ```
-``` {r}
+``` {r warning = FALSE}
 
 snow_depth <- govy_data$snwd %>%
   replace_na(list(snwd = 0)) %>%
@@ -66,4 +68,3 @@ p <- snow_depth %>% plot_ly(
 
 p
 ```
-
