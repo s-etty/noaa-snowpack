@@ -30,6 +30,7 @@ library(plotly)
 library(gapminder)
 library(lubridate)
 library(tidyr)
+library(dplyr)
 #loading the packages
 
 source('data/govy-data.R')
@@ -47,20 +48,31 @@ snow_depth <- govy_data$snwd %>%
 #looking for way to display the month abbr instead of number. adding as factor
 #adds a bunch of traces for some reason. adding as character, loses order
 
-max_temp <- govy_data$tmax %>%
+avg_obs_temp <- govy_data$tobs %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_obs_temp = mean(tobs))
+#this has two fewer rows than tmin and tmax, not working with it at the moment
+avg_min_temp <- govy_data$tmin %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_min_temp = mean(tmin))
+avg_max_temp <- govy_data$tmax %>%
   group_by(year = year(date), month = month(date)) %>%
   summarise(avg_max_temp = mean(tmax))
 
-snow_depth$max_temp <- max_temp$avg_max_temp
+avg_temps <- left_join(avg_min_temp, avg_max_temp, by = c('month', 'year'))
+avg_temps$avg <- rowMeans(avg_temps[3:4], na.rm = TRUE)
+#temps still seem off. it's in the data I think. Too hot
+
+snow_depth$avg_temp <- avg_temps$avg
 
 snow_plot <- snow_depth %>% plot_ly(
     x = ~year, 
     y = ~avg_depth, 
-    color = ~max_temp, 
+    color = ~avg_temp, 
     frame = ~month, 
     text = ~paste('<i>Month</i>: ', month_char,
                   '<br><b>Avg. Depth</b>: ', avg_depth, 
-                  '<br><b>Max Temp</b>: ', max_temp),
+                  '<br><b>Avg. Temp</b>: ', avg_temp),
     hoverinfo = 'text',
     type = 'bar'
   ) %>%
