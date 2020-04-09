@@ -30,6 +30,7 @@ library(plotly)
 library(gapminder)
 library(lubridate)
 library(tidyr)
+library(dplyr)
 #loading the packages
 
 source('data/govy-data.R')
@@ -40,29 +41,48 @@ source('data/govy-data.R')
 
 snow_depth <- govy_data$snwd %>%
   replace_na(list(snwd = 0)) %>%
-  group_by(year = year(date), month = month(date)) %>%
+  mutate(month_char = month(date, label = TRUE, abbr = TRUE)) %>%
+  group_by(year = year(date), month = month(date), month_char) %>%
   summarise(avg_depth = mean(snwd))
 #group by year and week, summarize as weekly snow depth
+#looking for way to display the month abbr instead of number. adding as factor
+#adds a bunch of traces for some reason. adding as character, loses order
 
-#snow_depth$year_week <- paste(snow_depth$year, snow_depth$week, sep = "-")
-#snow_depth$year_week <- as.factor(snow_depth$year_week)
-#create a new col, year_week. string version of year and week combined.
-#converted to factor so plotly doesn't try to sort alphabetically
+avg_obs_temp <- govy_data$tobs %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_obs_temp = mean(tobs))
+#this has two fewer rows than tmin and tmax, not working with it at the moment
+avg_min_temp <- govy_data$tmin %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_min_temp = mean(tmin))
+avg_max_temp <- govy_data$tmax %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_max_temp = mean(tmax))
 
-p <- snow_depth %>% plot_ly(
+avg_temps <- left_join(avg_min_temp, avg_max_temp, by = c('month', 'year'))
+avg_temps$avg <- rowMeans(avg_temps[3:4], na.rm = TRUE)
+#temps still seem off. it's in the data I think. Too hot
+
+snow_depth$avg_temp <- avg_temps$avg
+
+snow_plot <- snow_depth %>% plot_ly(
     x = ~year, 
     y = ~avg_depth, 
-    color = ~avg_depth, 
+    color = ~avg_temp, 
     frame = ~month, 
-    text = ~avg_depth, 
-    hoverinfo = "text",
+    text = ~paste('<i>Month</i>: ', month_char,
+                  '<br><b>Avg. Depth</b>: ', avg_depth, 
+                  '<br><b>Avg. Temp</b>: ', avg_temp),
+    hoverinfo = 'text',
     type = 'bar'
   ) %>%
   layout(
-    title = "Average Snow Depth by Week",
+    title = "Average Snow Depth by Week", 
     yaxis = list(title = "Average Depth (mm)")
+  ) %>%
+  animation_opts(
+    frame = 1000
   )
-  
 
-p
+snow_plot
 ```
