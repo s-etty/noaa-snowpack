@@ -40,28 +40,38 @@ source('data/govy-data.R')
 
 snow_depth <- govy_data$snwd %>%
   replace_na(list(snwd = 0)) %>%
-  group_by(year = year(date), month = month(date)) %>%
+  mutate(month_char = month(date, label = TRUE, abbr = TRUE)) %>%
+  group_by(year = year(date), month = month(date), month_char) %>%
   summarise(avg_depth = mean(snwd))
 #group by year and week, summarize as weekly snow depth
+#looking for way to display the month abbr instead of number. adding as factor
+#adds a bunch of traces for some reason. adding as character, loses order
 
-#snow_depth$year_week <- paste(snow_depth$year, snow_depth$week, sep = "-")
-#snow_depth$year_week <- as.factor(snow_depth$year_week)
-#create a new col, year_week. string version of year and week combined.
-#converted to factor so plotly doesn't try to sort alphabetically
+max_temp <- govy_data$tmax %>%
+  group_by(year = year(date), month = month(date)) %>%
+  summarise(avg_max_temp = mean(tmax))
+
+snow_depth$max_temp <- max_temp$avg_max_temp
 
 p <- snow_depth %>% plot_ly(
     x = ~year, 
     y = ~avg_depth, 
-    color = ~avg_depth, 
+    color = ~max_temp, 
     frame = ~month, 
-    text = ~avg_depth, 
-    hoverinfo = "text",
+    text = ~month_char,
+    hovertemplate = paste('<i>Month</i>: %{text}',
+                      '<br><b>Avg. Depth</b>: %{y}<br>',
+                      '<b>Max Temp</b>: %{x}'),
     type = 'bar'
   ) %>%
   layout(
-    title = "Average Snow Depth by Week",
+    title = "Average Snow Depth by Week", 
     yaxis = list(title = "Average Depth (mm)")
+  ) %>%
+  animation_opts(
+    frame = 1000
   )
+#need to fix the hovertemplate displaying max temp
   
 
 p
