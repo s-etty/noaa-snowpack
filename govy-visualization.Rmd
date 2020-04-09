@@ -69,7 +69,7 @@ snow_plot <- snow_depth %>% plot_ly(
     x = ~year, 
     y = ~avg_depth, 
     color = ~avg_temp, 
-    frame = ~month, 
+    frame = ~month,
     text = ~paste('<i>Month</i>: ', month_char,
                   '<br><b>Avg. Depth</b>: ', avg_depth, 
                   '<br><b>Avg. Temp</b>: ', avg_temp),
