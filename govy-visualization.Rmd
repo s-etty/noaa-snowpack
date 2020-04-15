@@ -69,8 +69,8 @@ snow_plot <- snow_depth %>% plot_ly(
     x = ~year, 
     y = ~avg_depth, 
     color = ~avg_temp, 
-    frame = ~month,
-    text = ~paste('<i>Month</i>: ', month_char,
+    frame = ~paste0(sprintf("%02d", month), " - ", month_char),
+    text = ~paste('<i>Date</i>: ', month_char, year,
                   '<br><b>Avg. Depth</b>: ', avg_depth, 
                   '<br><b>Avg. Temp</b>: ', avg_temp),
     hoverinfo = 'text',
@@ -81,9 +81,12 @@ snow_plot <- snow_depth %>% plot_ly(
     yaxis = list(title = "Average Depth (mm)")
   ) %>%
   animation_opts(
-    frame = 2000,
+    frame = 1500,
     transition = 750,
     easing = "linear"
+  ) %>%
+  animation_slider(
+    currentvalue = list(prefix = "Month: ")
   )
 
 snow_plot
